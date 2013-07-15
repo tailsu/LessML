@@ -1,0 +1,19 @@
+1. strings are sacred:
+there are many forms of strings that disambiguate shorthands or special needs inside data. think CDATA
+
+"a string"
+	"another string"
+	"one more" = "some value"
+	"let's do this" := "one more time"
+	
+<XML>escaped "string"<XML>: lives here
+
+2. form is simple and flexible
+
+&sigiled ::=:: property value
+	!sigiledprop (infix) something weird
+	
+you have sigils, a property name (with limitations to character set), an infix which is:
+* a string of punctuation, or
+* any string enclosed in some form of brackets or parentheses
+, and finally a value which can be anything that the string form allows

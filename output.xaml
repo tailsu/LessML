@@ -1,0 +1,30 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Window.Resources>
+    <Storyboard x:Key="storyboard">
+      <DoubleAnimation From="1" To="0" Storyboard.TargetProperty="Opacity" Storyboard.TargetName="pesho" />
+    </Storyboard>
+    <SomeConverter x:Key="myConverter" />
+    <Int32 x:Key="myConverterParam">20</Int32>
+  </Window.Resources>
+  <Button Content="Pesho" x:Name="pesho" x:Uid="pesho">
+    <Button.Style>
+      <Style TargetType="Button">
+        <Setter Property="FontSize">
+          <Setter.Value>
+            <Binding Path="PresenterFontSize" Converter="{StaticResource myConverter}" ConverterParameter="{DynamicResource myConverterParam}" />
+          </Setter.Value>
+        </Setter>
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <Grid>
+                <ContentPresenter />
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+    </Button.Style>
+  </Button>
+</Window>

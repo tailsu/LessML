@@ -1,0 +1,46 @@
+########## VAMP #############
+
+!infix ->
+!infix :=
+
+!infix:
+	form = property -> propertyType
+	[parent].property:
+		propertyType:
+
+!sigil:
+	form = .a
+	Setter
+		Property = a
+		Value = b
+		
+!define:
+	.a = b
+	Setter:
+		Property = a
+		Value = b
+		
+!define:
+	a -> b
+	!parent!.a:
+		b:
+		
+		
+		
+Window:
+	Style -> Style
+		TargetType = Window
+		.Width = 100
+		BasedOn := DataItem.Style
+		.Height := DataItem.Height
+		
+TextBlock:
+	"Something "
+	Bold: scary
+	" came "
+	Italic: our
+	" way. Check "
+	Hyperlink: it
+		Command :=
+	" out here!"
+	

@@ -1,0 +1,28 @@
+@using System
+Window:
+	Window.Resources:
+		Storyboard:
+			$Key = storyboard
+			DoubleAnimation:
+				From = 1
+				To = 0
+				Storyboard.TargetProperty = Opacity
+				Storyboard.TargetName = pesho
+		SomeConverter:
+			$Key = myConverter
+		Int32: 20
+			$Key = myConverterParam
+	Button:
+		Content = Pesho
+		$Name = pesho
+		$Uid = pesho
+		Style -> Style
+			TargetType = Button
+			.FontSize := PresenterFontSize
+				Converter = *myConverter
+				ConverterParameter = **myConverterParam
+			.FontWeight = Bold
+			.Template -> ControlTemplate
+				TargetType = Button
+				Grid:
+					ContentPresenter

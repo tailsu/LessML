@@ -1,0 +1,13 @@
+########## VAMP #############
+Window
+	Width = 15
+	Height = 20
+	Grid
+		Grid.RowDefinitions
+			RowDefinition
+				Height = 10
+			RowDefinition
+				Height = 10
+		HorizontalAlignment = Stretch
+		"VerticalAlignment" = "Center"
+		
