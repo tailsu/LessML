@@ -294,21 +294,27 @@ namespace LessXaml
                 else // case 2: unquoted string or more than one strings - split into key-op-value triplet
                 {
                     var splitter = new StringSplitter(quotedStrings);
-                    string key = null, op = null, value = null;
+                    string op = null;
 
                     var qKey = splitter.GetNextString();
-                    key = qKey.Snippet;
+                    var key = qKey.Snippet;
                     if (qKey.Quotation == null)
                     {
-                        op = operators.FirstOrDefault(o => qKey.Snippet.EndsWith(o));
+                        op = operators.FirstOrDefault(o => key.EndsWith(o));
                         if (op != null)
-                        {
-
-                        }
+                            key = key.Substring(key.Length - op.Length);
                     }
+
+                    if (op == null)
+                    {
+                        op = splitter.GetNextString().Snippet;
+                    }
+
 
                     yield return new Token { Type = Token.TokenType.Key, Value = key.Trim() };
                     yield return new Token { Type = Token.TokenType.Operator, Value = op ?? defaultOp };
+
+                    var value = splitter.JoinRest();
                     yield return new Token { Type = Token.TokenType.Value, Value = value.Trim() };
                 }
             }
