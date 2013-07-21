@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using LessXaml;
 using LessXaml.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -106,7 +104,7 @@ namespace VampTests
         [TestMethod]
         public void Tokenize_UnquotedValueString_OutputTrimmed()
         {
-            RunTest("A: the  quick  brown  fox", new TokenFactory()
+            RunTest("A:   the  quick  brown  fox  ", new TokenFactory()
                 .Indent(0).Key("A").Op(":").Value("the  quick  brown  fox"),
                 null, ":");
         }
@@ -120,7 +118,7 @@ namespace VampTests
         }
 
         [TestMethod]
-        public void Tokenize_OperatorNotFirstInLine_OperatorPrependedValue()
+        public void Tokenize_OperatorNotFirstInLine_OperatorPrependedToValue()
         {
             RunTest("ui:Control: = value text", new TokenFactory()
                 .Indent(0).Key("ui:Control").Op(":").Value("= value text"),
@@ -128,7 +126,7 @@ namespace VampTests
         }
 
         [TestMethod]
-        public void Tokenize_OpAtEndOfQuotedKeyString_AppendedToKe()
+        public void Tokenize_OpAtEndOfQuotedKeyString_OpAppendedToKey()
         {
             RunTest("'ui:Control:' = value text", new TokenFactory()
                 .Indent(0).Key("ui:Control:", SingleQuotes).Op("=").Value("value text"),
