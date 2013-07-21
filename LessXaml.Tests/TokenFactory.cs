@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using LessML;
+using LessML.Strings;
 
 namespace LessXaml.Tests
 {

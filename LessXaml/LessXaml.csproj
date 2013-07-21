@@ -7,7 +7,7 @@
     <ProjectGuid>{AFBB4979-B45C-48D8-AEA0-A65410887222}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LessXaml</RootNamespace>
+    <RootNamespace>LessML</RootNamespace>
     <AssemblyName>LessXaml</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -39,9 +39,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Strings\QuotedString.cs" />
+    <Compile Include="Strings\QuoteKind.cs" />
+    <Compile Include="Strings\StringQuotation.cs" />
+    <Compile Include="Strings\NoopEscapedString.cs" />
+    <Compile Include="Strings\IEscapedString.cs" />
     <Compile Include="LessXamlParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Vamp.cs" />
+    <Compile Include="VampNode.cs" />
+    <Compile Include="VampParseException.cs" />
+    <Compile Include="VampRules.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
