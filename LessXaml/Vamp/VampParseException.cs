@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace LessML
+namespace LessML.Vamp
 {
     [Serializable]
     public class VampParseException : Exception

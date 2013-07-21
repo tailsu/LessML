@@ -14,6 +14,11 @@ namespace LessML.Strings
             this.Snippet = snippet;
         }
 
+        public static implicit operator QuotedString(string s)
+        {
+            return new QuotedString(s);
+        }
+
         public bool Equals(QuotedString other)
         {
             return this.Snippet == other.Snippet && Equals(this.Quotation, other.Quotation);

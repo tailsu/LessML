@@ -1,5 +1,6 @@
 ﻿using System;
 using LessML;
+using LessML.Vamp;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LessXaml.Tests

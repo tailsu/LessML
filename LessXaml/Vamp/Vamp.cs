@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using LessML.Strings;
 
-namespace LessML
+namespace LessML.Vamp
 {
     public class VampParser
     {
@@ -303,13 +303,14 @@ namespace LessML
                 int indentationLevel;
                 line = indenter.Unindent(line, out indentationLevel);
 
-                yield return new Token(Token.TokenType.Indentation, indentationLevel);
-
                 var quotedStrings = quoter.GetStrings(line, reader)
                     .Where(q => q.Quotation == null || q.Quotation.Kind != QuoteKind.Comment)
                     .ToList();
-                Debug.Assert(quotedStrings.Count > 0);
+                if (quotedStrings.Count == 0)
+                    continue;
                 Debug.Assert(quotedStrings.All(q => q.Snippet.Length > 0));
+
+                yield return new Token(Token.TokenType.Indentation, indentationLevel);
 
                 // case 1: single quoted string
                 if (quotedStrings.Count == 1 && quotedStrings[0].Quotation != null)
@@ -385,11 +386,11 @@ namespace LessML
                         stack.Peek().Operator = token.ValueOfOperator;
                         break;
                     case Token.TokenType.Value:
-                        stack.Peek().Value = token.ValueOfValue;
+                        stack.Peek().SetValues(token.ValueOfValue);
                         nodeCompleted = true;
                         break;
                     case Token.TokenType.ElementValue:
-                        stack.Peek().Value = new List<QuotedString> { token.ValueOfElementValue };
+                        stack.Peek().SetValues(new[]{token.ValueOfElementValue});
                         nodeCompleted = true;
                         break;
                 }

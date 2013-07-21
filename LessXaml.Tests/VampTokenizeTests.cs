@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using LessML;
 using LessML.Strings;
+using LessML.Vamp;
 using LessXaml;
 using LessXaml.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

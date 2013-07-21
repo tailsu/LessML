@@ -4,6 +4,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
+using LessML;
+using LessML.Xaml;
 using Microsoft.VisualStudio.TextTemplating.VSHost;
 using Microsoft.Win32;
 
@@ -49,9 +51,9 @@ namespace {0}
         }}
     }}
 }}";
-                            var root = LessXamlParser.Translate(this.InputFileContents);
+                            var root = LessXamlParser.Translate(this.InputFileContents).Root;
                             var classNameAttr = root.Attribute(XName.Get("Class", LessXamlParser.XamlNs));
-                            string className = classNameAttr != null ? classNameAttr.Value : null;
+                            string className = classNameAttr != null ? classNameAttr.Value : "_Undefined_Class_";
                             string nsp = "";
                             if (className != null)
                             {
@@ -85,7 +87,7 @@ namespace {0}
         public override byte[] GenerateSummaryContent()
         {
             var result = LessXamlParser.Translate(this.InputFileContents);
-            return Encoding.UTF8.GetBytes(result.ToString());
+            return Encoding.UTF8.GetBytes(result.ToString(SaveOptions.OmitDuplicateNamespaces));
         }
 
         #region Registration

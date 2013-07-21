@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using LessML.Strings;
 
-namespace LessML
+namespace LessML.Vamp
 {
     public class VampRules
     {

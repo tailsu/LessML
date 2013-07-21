@@ -1,3 +1,5 @@
+using LessML;
+using LessML.Xaml;
 using LessXaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

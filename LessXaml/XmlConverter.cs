@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using LessML.Strings;
+using LessML.Vamp;
 
 namespace LessML
 {
@@ -46,19 +46,23 @@ namespace LessML
         {
             var asText = xml as XText;
             if (asText != null)
-               return new[] { new VampNode { Value = new List<QuotedString> { new QuotedString(asText.Value) } } };
+            {
+                var node = new VampNode();
+                node.SetValue(asText.Value);
+                return new[] { node };
+            }
 
             var asAttribute = xml as XAttribute;
             if (asAttribute != null)
-                return new[]
+            {
+                var node = new VampNode
                 {
-                    new VampNode
-                    {
-                        Key = resolver.StringFromXName(asAttribute.Name, true),
-                        Operator = new QuotedString(AttributeOp),
-                        Value = new List<QuotedString> { new QuotedString(asAttribute.Value) }
-                    }
+                    Key = resolver.StringFromXName(asAttribute.Name, true),
+                    Operator = new QuotedString(AttributeOp),
                 };
+                node.SetValue(asAttribute.Value);
+                return new[] {node};
+            }
 
             var asDoc = xml as XDocument;
             if (asDoc != null)
@@ -75,7 +79,6 @@ namespace LessML
                 {
                     Key = resolver.StringFromXName(asElement.Name, false),
                     Operator = new QuotedString(ElementOp),
-                    Value = new List<QuotedString>(),
                 };
 
                 node.Children.AddRange(asElement.Attributes().SelectMany(a => FromXml(a, resolver)));
@@ -119,41 +122,43 @@ namespace LessML
                 case "=":
                     if (!resolver.RegisterIfAlias(key, value, parent))
                     {
-                        var attr = new XAttribute(resolver.ResolveName(key), value);
+                        var name = resolver.ResolveName(key);
+                        if (name.Namespace == parent.Name.Namespace)
+                            name = name.LocalName;
+                        var attr = new XAttribute(name, value);
                         parent.Add(attr);
                     }
 
                     break;
 
                 case ":":
-                    resolver.PushLevel();
-                    
-                    var stubElement = new XElement("_");
-                    if (!String.IsNullOrEmpty(value))
-                        stubElement.Add(new XText(value));
-
                     Func<VampNode, bool> isXmlnsDecl = c =>
                         (c.Operator != null && c.Operator.Snippet == "=")
                             && (c.Key.Snippet == "xmlns" || c.Key.Snippet.StartsWith("xmlns:"));
 
-                    var xmlnsFirstChildren = node.Children.Where(isXmlnsDecl)
-                        .Concat(node.Children.Where(c => !isXmlnsDecl(c)));
+                    resolver.PushLevel();
 
-                    foreach (var child in xmlnsFirstChildren)
-                        Transform(child, stubElement, resolver);
+                    XElement element;
+                    {
+                        var xmlnsCollector = new XElement("_");
+                        foreach (var child in node.Children.Where(isXmlnsDecl))
+                            Transform(child, xmlnsCollector, resolver);
 
-                    var element = new XElement(resolver.ResolveName(key));
-                    resolver.PopLevel();
+                        element = new XElement(resolver.ResolveName(key));
+
+                        var xmlnsAttrs = xmlnsCollector.Attributes().ToList();
+                        xmlnsCollector.RemoveAll();
+                        foreach (var child in xmlnsAttrs)
+                            element.Add(child);
+                    }
+
                     parent.Add(element);
+                    if (!String.IsNullOrEmpty(value))
+                        element.Add(new XText(value));
+                    foreach (var child in node.Children.Where(c => !isXmlnsDecl(c)))
+                        Transform(child, element, resolver);
 
-                    var childrenNodes = stubElement.Nodes().ToList();
-                    var childrenAttrs = stubElement.Attributes().ToList();
-                    stubElement.RemoveAll();
-
-                    foreach (var child in childrenAttrs)
-                        element.Add(child);
-                    foreach (var child in childrenNodes)
-                        element.Add(child);
+                    resolver.PopLevel();
                     break;
             }
         }

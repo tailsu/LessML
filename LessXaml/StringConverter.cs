@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using LessML.Vamp;
 
 namespace LessML
 {

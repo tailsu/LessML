@@ -4,26 +4,65 @@ using System.Diagnostics;
 using System.Linq;
 using LessML.Strings;
 
-namespace LessML
+namespace LessML.Vamp
 {
     [DebuggerDisplay("{Key} {Operator} {Value}")]
     public class VampNode
     {
         public QuotedString Key { get; set; }
         public QuotedString Operator { get; set; }
-        public IList<QuotedString> Value { get; set; }
+        public List<QuotedString> Value { get; private set; }
         public VampNode Parent { get; set; }
 
         public readonly List<VampNode> Children = new List<VampNode>();
 
+        public VampNode()
+        {
+            this.Value = new List<QuotedString>();
+        }
+
         public bool IsBareValue
         {
-            get { return Key == null; }
+            get { return this.Key == null; }
         }
 
         public string JoinValue()
         {
             return String.Join("", this.Value.Select(q => q.Snippet).ToArray());
+        }
+
+        public void SetValue(string value)
+        {
+            this.Value = new List<QuotedString>();
+            if (!String.IsNullOrEmpty(value))
+                this.Value.Add(value);
+        }
+
+        public void SetValues(IEnumerable<QuotedString> values)
+        {
+            this.Value = new List<QuotedString>();
+            this.Value.AddRange(values);
+        }
+
+        public void AddChild(VampNode child)
+        {
+            if (child.Parent != null)
+                throw new Exception("TODO");
+            this.Children.Add(child);
+            child.Parent = this;
+        }
+
+        public void AddChildren(IEnumerable<VampNode> children)
+        {
+            foreach (var child in children)
+                this.AddChild(child);
+        }
+
+        public void ClearChildren()
+        {
+            foreach (var child in this.Children)
+                child.Parent = null;
+            this.Children.Clear();
         }
 
         public bool IsSemanticallyEquivalent(VampNode other)
