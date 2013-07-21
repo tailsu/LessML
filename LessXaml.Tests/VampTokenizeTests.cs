@@ -10,9 +10,15 @@ namespace VampTests
     [TestClass]
     public class VampTokenizeTests
     {
+        public static readonly StringQuotation SingleQuotes = new StringQuotation { Start = "'", End = "'", Escaping = NoopEscapedString.Instance, Kind = QuoteKind.String };
+        public static readonly StringQuotation DoubleQuotes = new StringQuotation { Start = "\"", End = "\"", Escaping = NoopEscapedString.Instance, Kind = QuoteKind.String };
+
         private static void RunTest(string program, TokenFactory expectedTokens, string defaultOp, params string[] ops)
         {
-            var tokens = VampParser.Tokenize(program, ops, defaultOp).ToList();
+            var rules = new VampRules {DefaultOp = defaultOp};
+            rules.Operators.Clear();
+            rules.Operators.AddRange(ops);
+            var tokens = VampParser.Tokenize(program, rules).ToList();
             CollectionAssert.AreEqual(expectedTokens.ToList(), tokens);
         }
 
@@ -74,18 +80,18 @@ namespace VampTests
         [TestMethod]
         public void Tokenize_QuotedString_Untrimmed()
         {
-            string[] programs = { "  \"  A string  \"  ", "  '  A string  '  " };
-            foreach (var program in programs)
-            {
-                RunTest(program, new TokenFactory().Indent(0).ElementValue("  A string  "), "=", "=");
-            }
+            const string Program1 = "  \"  A string  \"  ";
+            const string Program2 = "  '  A string  '  ";
+
+            RunTest(Program1, new TokenFactory().Indent(1).ElementValue("  A string  ", DoubleQuotes), "=", "=");
+            RunTest(Program2, new TokenFactory().Indent(1).ElementValue("  A string  ", SingleQuotes), "=", "=");
         }
 
         [TestMethod]
         public void Tokenize_QuotedKeyAndOpAndValue()
         {
             RunTest("'A key' '=' 'A value'", new TokenFactory()
-                .Indent(0).Key("A key").Op("=").Value("A value"),
+                .Indent(0).Key("A key", SingleQuotes).Op("=", SingleQuotes).Value("A value", SingleQuotes),
                 null, "=");
         }
 
@@ -93,7 +99,7 @@ namespace VampTests
         public void Tokenize_QuotedKeyAndRestIsUnquoted()
         {
             RunTest("'A key' = some value ", new TokenFactory()
-                .Indent(0).Key("A key").Op("=").Value("some value"),
+                .Indent(0).Key("A key", SingleQuotes).Op("=").Value("some value"),
                 null, "=");
         }
 
@@ -125,15 +131,8 @@ namespace VampTests
         public void Tokenize_OpAtEndOfQuotedKeyString_AppendedToKe()
         {
             RunTest("'ui:Control:' = value text", new TokenFactory()
-                .Indent(0).Key("ui:Control:").Op("=").Value("value text"),
+                .Indent(0).Key("ui:Control:", SingleQuotes).Op("=").Value("value text"),
                 null, ":", "=");
-        }
-
-        [TestMethod]
-        public void Parse_Simple()
-        {
-            const string Program = "A\n\tB = B1\n\tC -> C1\n\t\tD :=";
-            var result = VampParser.Parse(Program, new[] { "=", "->", ":=" }, ":");
         }
     }
 }

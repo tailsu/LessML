@@ -4,36 +4,40 @@ namespace LessXaml.Tests
 {
     internal class TokenFactory
     {
-        private List<VampParser.Token> myTokens = new List<VampParser.Token>();
+        private readonly List<VampParser.Token> myTokens = new List<VampParser.Token>();
 
         public TokenFactory Indent(int level)
         {
-            myTokens.Add(new VampParser.Token { Type = VampParser.Token.TokenType.Indentation, Value = level });
+            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.Indentation, level));
             return this;
         }
 
-        public TokenFactory Key(string key)
+        public TokenFactory Key(string key, StringQuotation quotation = null)
         {
-            myTokens.Add(new VampParser.Token { Type = VampParser.Token.TokenType.Key, Value = key });
+            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.Key, new QuotedString { Snippet = key, Quotation = quotation }));
             return this;
         }
 
 
-        public TokenFactory Op(string op)
+        public TokenFactory Op(string op, StringQuotation quotation = null)
         {
-            myTokens.Add(new VampParser.Token { Type = VampParser.Token.TokenType.Operator, Value = op });
+            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.Operator, new QuotedString { Snippet = op, Quotation = quotation}));
             return this;
         }
 
-        public TokenFactory Value(string value)
+        public TokenFactory Value(string value, StringQuotation quotation = null)
         {
-            myTokens.Add(new VampParser.Token { Type = VampParser.Token.TokenType.Value, Value = value });
+            var list = new List<QuotedString>();
+            if (!string.IsNullOrEmpty(value) || quotation != null)
+                list.Add(new QuotedString { Snippet = value, Quotation = quotation });
+
+            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.Value, list));
             return this;
         }
 
-        public TokenFactory ElementValue(string value)
+        public TokenFactory ElementValue(string value, StringQuotation quotation = null)
         {
-            myTokens.Add(new VampParser.Token { Type = VampParser.Token.TokenType.ElementValue, Value = value });
+            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.ElementValue, new QuotedString { Snippet = value, Quotation = quotation }));
             return this;
         }
 

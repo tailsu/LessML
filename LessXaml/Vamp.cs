@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -11,12 +12,104 @@ namespace LessXaml
     [DebuggerDisplay("{Key} {Operator} {Value}")]
     public class VampNode
     {
-        public string Key { get; set; }
-        public string Operator { get; set; }
-        public string Value { get; set; }
+        public QuotedString Key { get; set; }
+        public QuotedString Operator { get; set; }
+        public IList<QuotedString> Value { get; set; }
         public VampNode Parent { get; set; }
 
         public readonly List<VampNode> Children = new List<VampNode>();
+    }
+
+    public interface IEscapedString
+    {
+        string Unescape(string s);
+    }
+
+    public class NoopEscapedString : IEscapedString
+    {
+        public static readonly NoopEscapedString Instance = new NoopEscapedString();
+
+        public string Unescape(string s)
+        {
+            return s;
+        }
+    }
+
+    public class StringQuotation
+    {
+        public string Start;
+        public string End;
+        public QuoteKind Kind = QuoteKind.String;
+        public IEscapedString Escaping = NoopEscapedString.Instance;
+
+        public bool Equals(StringQuotation other)
+        {
+            return this.Start == other.Start
+                && this.End == other.End
+                && this.Kind == other.Kind
+                && Equals(this.Escaping, other.Escaping);
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as StringQuotation;
+            return this.Equals(other);
+        }
+    }
+
+    public enum QuoteKind
+    {
+        String,
+        Comment
+    }
+
+    public class QuotedString
+    {
+        public string Snippet;
+        public StringQuotation Quotation;
+
+        public bool Equals(QuotedString other)
+        {
+            return this.Snippet == other.Snippet && Equals(this.Quotation, other.Quotation);
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as QuotedString;
+            return this.Equals(other);
+        }
+
+        public override string ToString()
+        {
+            if (Quotation != null)
+                return this.Quotation.Start + this.Snippet + this.Quotation.End;
+            else
+                return this.Snippet;
+        }
+    }
+
+    public class VampRules
+    {
+        public readonly List<StringQuotation> Quotations
+            = new List<StringQuotation>
+            {
+                new StringQuotation {Start = "\"", End = "\""},
+                new StringQuotation {Start = "'", End = "'"},
+                new StringQuotation {Start = "/*", End = "*/", Kind = QuoteKind.Comment},
+                new StringQuotation {Start = "#", Kind = QuoteKind.Comment},
+            };
+
+        public readonly List<string> Operators = new List<string>();
+        public string DefaultOp;
+
+        public static VampRules MakeXmlRules()
+        {
+            var rules = new VampRules();
+            rules.Operators.Add("=");
+            rules.Operators.Add(":");
+            rules.DefaultOp = ":";
+            return rules;
+        }
     }
 
     public class VampParser
@@ -32,14 +125,6 @@ namespace LessXaml
         [DebuggerDisplay("{Type}: {Value}")]
         internal class Token
         {
-            public override bool Equals(object otherObj)
-            {
-                var other = otherObj as Token;
-                if (other == null)
-                    return false;
-                return this.Type == other.Type && Equals(this.Value, other.Value);
-            }
-
             public enum TokenType
             {
                 Indentation,
@@ -49,35 +134,92 @@ namespace LessXaml
                 ElementValue,
             }
 
-            public TokenType Type;
-            public object Value;
-        }
+            public readonly TokenType Type;
+            public readonly object Value;
 
-        private class StringQuotation
-        {
-            public string Start;
-            public string End;
-            public QuoteKind Kind = QuoteKind.String;
-
-            public virtual string Unquote(string s)
+            public Token(TokenType type, object value)
             {
-                return s;
+                this.Type = type;
+                this.Value = value;
+            }
+
+            public int ValueOfIndentation
+            {
+                get
+                {
+                    this.CheckType(TokenType.Indentation);
+                    return (int) Value;
+                }
+            }
+
+            public QuotedString ValueOfKey
+            {
+                get
+                {
+                    this.CheckType(TokenType.Key);
+                    return (QuotedString) Value;
+                }
+            }
+
+            public QuotedString ValueOfOperator
+            {
+                get
+                {
+                    this.CheckType(TokenType.Operator);
+                    return (QuotedString) Value;
+                }
+            }
+
+            public List<QuotedString> ValueOfValue
+            {
+                get
+                {
+                    this.CheckType(TokenType.Value);
+                    return (List<QuotedString>) Value;
+                }
+            }
+
+            public QuotedString ValueOfElementValue
+            {
+                get
+                {
+                    this.CheckType(TokenType.ElementValue);
+                    return (QuotedString) Value;
+                }
+            }
+
+            public bool Equals(Token other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                if (this.Type != other.Type)
+                    return false;
+
+                var thisEnum = this.Value as IEnumerable;
+                var otherEnum = other.Value as IEnumerable;
+                if (thisEnum != null && otherEnum != null)
+                    return thisEnum.Cast<object>().SequenceEqual(otherEnum.Cast<object>());
+
+                return Equals(this.Value, other.Value);
+            }
+
+            public override bool Equals(object obj)
+            {
+                var other = obj as Token;
+                return this.Equals(other);
+            }
+
+            private void CheckType(TokenType expectedType)
+            {
+                if (this.Type != expectedType)
+                    throw new Exception("TODO:");
             }
         }
 
-        private static List<StringQuotation> Quotations
-            = new List<StringQuotation>
-            {
-                new StringQuotation {Start = "\"", End = "\""},
-                new StringQuotation {Start = "'", End = "'"},
-                new StringQuotation {Start = "/*", End = "*/", Kind = QuoteKind.Comment},
-                new StringQuotation {Start = "#", Kind = QuoteKind.Comment},
-            };
-
         private class Indenter
         {
-            private Stack<string> myIndentationStrings = new Stack<string>();
-            private char? myUniformWhitespaceChar = null;
+            private readonly Stack<string> myIndentationStrings = new Stack<string>();
+            private char? myUniformWhitespaceChar;
 
             public Indenter()
             {
@@ -87,14 +229,14 @@ namespace LessXaml
             public string Unindent(string line, out int indentationLevel)
             {
                 int nonWhitespaceIndex = 0;
-                for (int i = 0; i < line.Length; ++i)
+                foreach (char c in line)
                 {
-                    if (!Char.IsWhiteSpace(line[i]))
+                    if (!Char.IsWhiteSpace(c))
                         break;
                     nonWhitespaceIndex++;
                     if (this.myUniformWhitespaceChar == null)
-                        this.myUniformWhitespaceChar = line[i];
-                    else if (this.myUniformWhitespaceChar.Value != line[i])
+                        this.myUniformWhitespaceChar = c;
+                    else if (this.myUniformWhitespaceChar.Value != c)
                         throw new VampParseException(Exception_MixedTabsAndSpaces);
                 }
 
@@ -119,26 +261,21 @@ namespace LessXaml
             }
         }
 
-        private enum QuoteKind
-        {
-            String,
-            Comment
-        }
-
-        private class QuotedString
-        {
-            public string Snippet;
-            public StringQuotation Quotation;
-        }
-
         private class StringQuoter
         {
-            public static IEnumerable<QuotedString> GetStrings(string line, TextReader lineReader)
+            private readonly IList<StringQuotation> myQuotations;
+
+            public StringQuoter(IList<StringQuotation> quotations)
+            {
+                myQuotations = quotations;
+            }
+
+            public IEnumerable<QuotedString> GetStrings(string line, TextReader lineReader)
             {
                 var result = new List<QuotedString>();
                 while (true)
                 {
-                    var match = Quotations.Select(q => new { Index = line.IndexOf(q.Start, StringComparison.Ordinal), q.Start, q.End, Quotation = q })
+                    var match = myQuotations.Select(q => new { Index = line.IndexOf(q.Start, StringComparison.Ordinal), q.Start, q.End, Quotation = q })
                         .Where(tup => tup.Index != -1)
                         .OrderBy(tup => tup.Index)
                         .FirstOrDefault();
@@ -191,29 +328,12 @@ namespace LessXaml
 
                     result.Add(new QuotedString
                     {
-                        Snippet = match.Quotation.Unquote(quotedString),
+                        Snippet = match.Quotation.Escaping.Unescape(quotedString),
                         Quotation = match.Quotation
                     });
                 }
 
                 return result;
-            }
-
-            public static IEnumerable<QuotedString> SplitOnWhitespace(IEnumerable<QuotedString> strings)
-            {
-                return strings
-                    .SelectMany(q =>
-                    {
-                        if (q.Quotation != null)
-                        {
-                            return new[] { q };
-                        }
-                        else
-                        {
-                            return q.Snippet.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(s => new QuotedString { Snippet = s.Trim() });
-                        }
-                    });
             }
         }
 
@@ -257,18 +377,26 @@ namespace LessXaml
                 return new QuotedString { Snippet = result };
             }
 
-            public string JoinRest()
+            public List<QuotedString> JoinRest()
             {
-                var result = myStringToSplit;
-                result += String.Join("", myStrings.Skip(myStringIndex).Select(q => q.Snippet).ToArray());
+                var result = new List<QuotedString>();
+                if (myStringToSplit != null)
+                {
+                    var remainingStr = myStringToSplit.Trim();
+                    if (!String.IsNullOrEmpty(remainingStr))
+                        result.Add(new QuotedString { Snippet = remainingStr });
+                }
+
+                result.AddRange(this.myStrings.Skip(this.myStringIndex));
                 return result;
             }
         }
 
-        internal static IEnumerable<Token> Tokenize(string program, IList<string> operators, string defaultOp)
+        internal static IEnumerable<Token> Tokenize(string program, VampRules rules)
         {
             var reader = new StringReader(program);
             var indenter = new Indenter();
+            var quoter = new StringQuoter(rules.Quotations);
             string line;
             while ((line = reader.ReadLine()) != null)
             {
@@ -278,9 +406,9 @@ namespace LessXaml
                 int indentationLevel;
                 line = indenter.Unindent(line, out indentationLevel);
 
-                yield return new Token { Type = Token.TokenType.Indentation, Value = indentationLevel };
+                yield return new Token(Token.TokenType.Indentation, indentationLevel);
 
-                var quotedStrings = StringQuoter.GetStrings(line, reader)
+                var quotedStrings = quoter.GetStrings(line, reader)
                     .Where(q => q.Quotation == null || q.Quotation.Kind != QuoteKind.Comment)
                     .ToList();
                 Debug.Assert(quotedStrings.Count > 0);
@@ -289,52 +417,55 @@ namespace LessXaml
                 // case 1: single quoted string
                 if (quotedStrings.Count == 1 && quotedStrings[0].Quotation != null)
                 {
-                    yield return new Token { Type = Token.TokenType.ElementValue, Value = quotedStrings[0].Snippet };
+                    yield return new Token(Token.TokenType.ElementValue, quotedStrings[0]);
                 }
                 else // case 2: unquoted string or more than one strings - split into key-op-value triplet
                 {
                     var splitter = new StringSplitter(quotedStrings);
-                    string op = null;
+                    QuotedString qOp = null;
 
                     var qKey = splitter.GetNextString();
-                    var key = qKey.Snippet;
                     if (qKey.Quotation == null)
                     {
-                        op = operators.FirstOrDefault(o => key.EndsWith(o));
+                        //TODO: don't do this if an operator is not made of only punctuation
+                        var key = qKey.Snippet;
+                        var op = rules.Operators.FirstOrDefault(o => key.EndsWith(o));
                         if (op != null)
-                            key = key.Substring(key.Length - op.Length);
+                        {
+                            key = key.Substring(0, key.Length - op.Length);
+                            qOp = new QuotedString { Snippet = op };
+                        }
+                        qKey.Snippet = key;
                     }
 
-                    if (op == null)
+                    if (qOp == null)
                     {
-                        op = splitter.GetNextString().Snippet;
+                        qOp = splitter.GetNextString();
                     }
 
+                    yield return new Token(Token.TokenType.Key, qKey);
+                    yield return new Token(Token.TokenType.Operator, qOp ?? new QuotedString { Snippet = rules.DefaultOp });
 
-                    yield return new Token { Type = Token.TokenType.Key, Value = key.Trim() };
-                    yield return new Token { Type = Token.TokenType.Operator, Value = op ?? defaultOp };
-
-                    var value = splitter.JoinRest();
-                    yield return new Token { Type = Token.TokenType.Value, Value = value.Trim() };
+                    var valueStrings = splitter.JoinRest();
+                    yield return new Token(Token.TokenType.Value, valueStrings);
                 }
             }
         }
 
-        public static IEnumerable<VampNode> Parse(string program, IList<string> operators, string defaultOperator)
+        /// <returns>List of root nodes</returns>
+        public static IEnumerable<VampNode> Parse(string program, VampRules rules)
         {
-            //program = RemoveComments(program);
-
-            var tokens = Tokenize(program, operators, defaultOperator);
+            var tokens = Tokenize(program, rules);
             var rootNodes = new List<VampNode>();
             var stack = new Stack<VampNode>();
             foreach (var token in tokens)
             {
-                VampNode node;
+                bool nodeCompleted = false;
                 switch (token.Type)
                 {
                     case Token.TokenType.Indentation:
-                        node = new VampNode();
-                        int thisIndentLevel = (int)token.Value;
+                        var node = new VampNode();
+                        int thisIndentLevel = token.ValueOfIndentation;
                         if (thisIndentLevel == 0)
                         {
                             rootNodes.Add(node);
@@ -351,109 +482,37 @@ namespace LessXaml
                         }
                         break;
                     case Token.TokenType.Key:
-                        stack.Peek().Key = (string)token.Value;
+                        stack.Peek().Key = token.ValueOfKey;
                         break;
                     case Token.TokenType.Operator:
-                        stack.Peek().Operator = (string)token.Value;
+                        stack.Peek().Operator = token.ValueOfOperator;
                         break;
                     case Token.TokenType.Value:
-                        stack.Peek().Value = (string)token.Value;
+                        stack.Peek().Value = token.ValueOfValue;
+                        nodeCompleted = true;
                         break;
+                    case Token.TokenType.ElementValue:
+                        stack.Peek().Value = new List<QuotedString> { token.ValueOfElementValue };
+                        nodeCompleted = true;
+                        break;
+                }
+
+                if (nodeCompleted)
+                {
+                    //TODO: callback
                 }
             }
 
             return rootNodes;
         }
-
-        internal static string RemoveComments(string contents)
-        {
-            var sb = new StringBuilder();
-
-            // remove line comments
-            int pointer = 0;
-            while (true)
-            {
-                var hashIndex = contents.IndexOf(LineCommentSymbol, pointer, StringComparison.Ordinal);
-                if (hashIndex == -1)
-                    break;
-
-                sb.Append(contents.Substring(pointer, hashIndex - pointer));
-                var eolIndex = contents.IndexOfAny(new[] { '\r', '\n' }, hashIndex);
-                if (eolIndex == -1)
-                {
-                    pointer = contents.Length;
-                    break;
-                }
-
-                pointer = eolIndex;
-            }
-
-            if (pointer < contents.Length)
-                sb.Append(contents.Substring(pointer));
-
-            contents = sb.ToString();
-            sb = new StringBuilder();
-
-            // remove block comments
-            pointer = 0;
-            while (true)
-            {
-                var blockStart = contents.IndexOf(BlockCommentStartSymbol, pointer, StringComparison.Ordinal);
-                if (blockStart == -1)
-                    break;
-
-                var blockEnd = contents.IndexOf(BlockCommentEndSymbol, blockStart + BlockCommentStartSymbol.Length, StringComparison.Ordinal);
-                if (blockEnd == -1)
-                    throw new VampParseException("Unfinished block comment");
-
-                sb.Append(contents.Substring(pointer, blockStart - pointer));
-                pointer = blockEnd + BlockCommentEndSymbol.Length;
-            }
-
-            if (pointer < contents.Length)
-                sb.Append(contents.Substring(pointer));
-
-            return sb.ToString();
-        }
     }
 
     [Serializable]
-    public class VampException : Exception
+    public class VampParseException : Exception
     {
-        public VampException()
-        {
-        }
-
-        public VampException(string message) : base(message)
-        {
-        }
-
-        public VampException(string message, Exception inner) : base(message, inner)
-        {
-        }
-
-        protected VampException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
-    }
-
-    [Serializable]
-    public class VampParseException : VampException
-    {
-        public VampParseException()
-        {
-        }
-
-        public VampParseException(string message) : base(message)
-        {
-        }
-
-        public VampParseException(string message, Exception inner) : base(message, inner)
-        {
-        }
-
-        protected VampParseException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
+        public VampParseException() { }
+        public VampParseException(string message) : base(message) { }
+        public VampParseException(string message, Exception inner) : base(message, inner) { }
+        protected VampParseException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

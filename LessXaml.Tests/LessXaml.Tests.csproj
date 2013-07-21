@@ -53,7 +53,6 @@
   </Choose>
   <ItemGroup>
     <Compile Include="AssertEx.cs" />
-    <Compile Include="CommentTests.cs" />
     <Compile Include="LessXamlParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TokenFactory.cs" />
