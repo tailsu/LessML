@@ -16,14 +16,5 @@ namespace LessML
 
         public readonly List<string> Operators = new List<string>();
         public string DefaultOp;
-
-        public static VampRules MakeXmlRules()
-        {
-            var rules = new VampRules();
-            rules.Operators.Add("=");
-            rules.Operators.Add(":");
-            rules.DefaultOp = ":";
-            return rules;
-        }
     }
 }

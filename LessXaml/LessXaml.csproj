@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StringConverter.cs" />
     <Compile Include="Strings\QuotedString.cs" />
     <Compile Include="Strings\QuoteKind.cs" />
     <Compile Include="Strings\StringQuotation.cs" />
@@ -50,6 +51,7 @@
     <Compile Include="VampNode.cs" />
     <Compile Include="VampParseException.cs" />
     <Compile Include="VampRules.cs" />
+    <Compile Include="XmlConverter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
