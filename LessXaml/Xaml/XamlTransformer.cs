@@ -13,7 +13,7 @@ namespace LessML.Xaml
             return rules;
         }
 
-        public bool Transform(VampNode node)
+        public MacroResult Transform(VampNode node)
         {
             if (node.Key.Snippet.StartsWith("."))
             {
@@ -47,7 +47,7 @@ namespace LessML.Xaml
                 node.SetValue(null);
                 node.AddChild(propNode);
                 node.AddChild(valueNode);
-                return true;
+                return MacroResult.ReapplyTransform;
             }
 
             switch (node.Operator.Snippet)
@@ -75,7 +75,7 @@ namespace LessML.Xaml
                         node.Operator = ":";
                         node.SetValue(null);
                     }
-                    return true;
+                    return MacroResult.ReapplyTransform;
 
                 case ":=":
                     {
@@ -97,22 +97,22 @@ namespace LessML.Xaml
                         node.Operator = "->";
                         node.SetValue("Binding");
                     }
-                    return true;
+                    return MacroResult.ReapplyTransform;
             }
 
             var val = node.JoinValue();
             if (val.StartsWith("**"))
             {
                 node.SetValue("{DynamicResource " + val.Substring(2) + "}");
-                return true;
+                return MacroResult.ContinueToChildren;
             }
             if (val.StartsWith("*"))
             {
                 node.SetValue("{StaticResource " + val.Substring(1) + "}");
-                return true;
+                return MacroResult.ContinueToChildren;
             }
 
-            return false;
+            return MacroResult.ContinueToChildren;
         }
     }
 }

@@ -350,8 +350,8 @@ namespace LessML.Vamp
             }
         }
 
-        /// <returns>List of root nodes</returns>
-        public static IEnumerable<VampNode> Parse(string program, VampRules rules)
+        /// <returns>A pseudo-node acting like the parent to all top-level nodes</returns>
+        public static VampNode Parse(string program, VampRules rules)
         {
             var tokens = Tokenize(program, rules);
             var rootNodes = new List<VampNode>();
@@ -401,7 +401,9 @@ namespace LessML.Vamp
                 }
             }
 
-            return rootNodes;
+            var pseudoRoot = new VampNode();
+            pseudoRoot.AddChildren(rootNodes);
+            return pseudoRoot;
         }
     }
 }

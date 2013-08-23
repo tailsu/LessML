@@ -21,13 +21,13 @@ namespace LessML
             return rules;
         }
 
-        public static XDocument ToXml(IEnumerable<VampNode> roots)
+        public static XDocument ToXml(VampNode root)
         {
-            var stub = new XElement("_");
+            var stub = new XElement("__LessML_implicit_root__");
 
             var resolver = new NamespaceResolver();
 
-            foreach (var node in roots)
+            foreach (var node in root.GetRealNodes())
                 Transform(node, stub, resolver);
 
             var subnodes = stub.Nodes().ToList();

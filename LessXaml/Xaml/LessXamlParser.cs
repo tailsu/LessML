@@ -9,9 +9,12 @@ namespace LessML.Xaml
     {
         public static XDocument Translate(string lessXamlProgram)
         {
-            var ast = VampParser.Parse(lessXamlProgram, XamlTransformer.MakeRules()).ToList();
+            var rules = XamlTransformer.MakeRules();
+            TemplateTransformer.AppendRules(rules);
 
-            var root = ast.Single(n => n.Key != null);
+            var ast = VampParser.Parse(lessXamlProgram, rules);
+            MacroExpander.Transform(ast, new TemplateTransformer());
+            var root = ast.Children.Single(n => n.Key != null);
             MacroExpander.Transform(root, new XamlTransformer());
 
             if (root.Children.FirstOrDefault(c => c.Key.Snippet == "xmlns" && c.Operator.Snippet == "=") == null)

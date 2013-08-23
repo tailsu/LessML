@@ -26,6 +26,11 @@ namespace LessML.Vamp
             get { return this.Key == null; }
         }
 
+        public bool IsPseudoRoot
+        {
+            get { return this.Key == null && this.Value.Count == 0; }
+        }
+
         public string JoinValue()
         {
             return String.Join("", this.Value.Select(q => q.Snippet).ToArray());
@@ -73,6 +78,24 @@ namespace LessML.Vamp
                 && (this.Value.Count == 0 || this.Value.Zip(other.Value, (a, b) => QuotedString.IsSemanticallyEquivalent(a, b)).All(_ => _))
                 && this.Children.Count == other.Children.Count
                 && (this.Children.Count == 0 || this.Children.Zip(other.Children, (a, b) => a.IsSemanticallyEquivalent(b)).All(_ => _));
+        }
+
+        public VampNode Clone()
+        {
+            var clone = new VampNode
+            {
+                Key = this.Key.Clone(),
+                Operator = this.Operator.Clone(),
+                Value = this.Value.Select(v => v.Clone()).ToList(),
+                Parent = null,
+            };
+            clone.Children.AddRange(this.Children.Select(c => c.Clone()));
+            return clone;
+        }
+
+        public IEnumerable<VampNode> GetRealNodes()
+        {
+            return this.IsPseudoRoot ? (IEnumerable<VampNode>) this.Children : new[] {this};
         }
     }
 

@@ -57,6 +57,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TokenFactory.cs" />
     <Compile Include="StringConverterTests.cs" />
+    <Compile Include="TemplateTests.cs" />
     <Compile Include="XmlConverterTests.cs" />
     <Compile Include="VampTokenizeTests.cs" />
   </ItemGroup>

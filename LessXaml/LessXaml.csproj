@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Macros\TemplateTransformer.cs" />
     <Compile Include="StringConverter.cs" />
     <Compile Include="Strings\QuotedString.cs" />
     <Compile Include="Strings\QuoteKind.cs" />

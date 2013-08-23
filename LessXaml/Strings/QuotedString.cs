@@ -48,4 +48,14 @@ namespace LessML.Strings
                 && (b.Quotation == null || b.Quotation.Kind == QuoteKind.String);
         }
     }
+
+    public static class QuotedStringExtensions
+    {
+        public static QuotedString Clone(this QuotedString value)
+        {
+            if (value == null)
+                return null;
+            return new QuotedString { Snippet = value.Snippet, Quotation = value.Quotation };
+        }
+    }
 }

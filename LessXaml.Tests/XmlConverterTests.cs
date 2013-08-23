@@ -12,7 +12,7 @@ namespace LessXaml.Tests
     {
         private static void RunTest(string program, string expectedXml, bool skipFromXml = false)
         {
-            var parsed = VampParser.Parse(program, XmlConverter.MakeRules()).ToList();
+            var parsed = VampParser.Parse(program, XmlConverter.MakeRules());
             var doc = XmlConverter.ToXml(parsed);
 
             var str = doc.ToString(SaveOptions.DisableFormatting);
@@ -22,9 +22,9 @@ namespace LessXaml.Tests
             {
                 var fromXml = XmlConverter.FromXml(XDocument.Parse(str)).ToList();
 
-                Assert.AreEqual(parsed.Count, fromXml.Count);
-                for (int i = 0; i < parsed.Count; ++i)
-                    Assert.IsTrue(parsed[i].IsSemanticallyEquivalent(fromXml[i]));
+                Assert.AreEqual(parsed.Children.Count, fromXml.Count);
+                for (int i = 0; i < parsed.Children.Count; ++i)
+                    Assert.IsTrue(parsed.Children[i].IsSemanticallyEquivalent(fromXml[i]));
             }
         }
 

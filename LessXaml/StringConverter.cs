@@ -6,9 +6,9 @@ namespace LessML
 {
     public static class StringConverter
     {
-        public static string ToString(IEnumerable<VampNode> roots)
+        public static string ToString(VampNode root)
         {
-            return ToString(roots, "    ");
+            return ToString(root.GetRealNodes(), "    ");
         }
 
         public static string ToString(IEnumerable<VampNode> roots, string indentation)
