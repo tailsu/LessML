@@ -123,9 +123,9 @@ namespace LessXaml.Tests
         public void ToXml_MultipleElementValues()
         {
             RunTest(
-@"TextBlock:
+@"TextBlock
     'a very '
-    Bold:
+    Bold
         'bold'
     ' proposition'",
                    "<TextBlock>a very <Bold>bold</Bold> proposition</TextBlock>");

@@ -32,9 +32,10 @@ namespace LessML
         {
             bool prependSpace = false;
 
-            if (!node.IsBareValue)
+            sb.Append(node.Key);
+
+            if (node.Operator != null)
             {
-                sb.Append(node.Key);
                 sb.Append(" ");
                 sb.Append(node.Operator);
                 prependSpace = true;

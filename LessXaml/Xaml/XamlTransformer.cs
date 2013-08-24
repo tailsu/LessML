@@ -50,7 +50,8 @@ namespace LessML.Xaml
                 return MacroResult.ReapplyTransform;
             }
 
-            switch (node.Operator.Snippet)
+            var op = node.Operator != null ? node.Operator.Snippet : ":";
+            switch (op)
             {
                 case "->":
                     {

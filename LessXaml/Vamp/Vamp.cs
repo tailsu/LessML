@@ -28,7 +28,6 @@ namespace LessML.Vamp
                 Key,
                 Operator,
                 Value,
-                ElementValue,
             }
 
             public readonly TokenType Type;
@@ -73,15 +72,6 @@ namespace LessML.Vamp
                 {
                     this.CheckType(TokenType.Value);
                     return (List<QuotedString>) this.Value;
-                }
-            }
-
-            public QuotedString ValueOfElementValue
-            {
-                get
-                {
-                    this.CheckType(TokenType.ElementValue);
-                    return (QuotedString) this.Value;
                 }
             }
 
@@ -313,11 +303,11 @@ namespace LessML.Vamp
                 yield return new Token(Token.TokenType.Indentation, indentationLevel);
 
                 // case 1: single quoted string
-                if (quotedStrings.Count == 1 && quotedStrings[0].Quotation != null)
-                {
-                    yield return new Token(Token.TokenType.ElementValue, quotedStrings[0]);
-                }
-                else // case 2: unquoted string or more than one strings - split into key-op-value triplet
+                //if (quotedStrings.Count == 1 && quotedStrings[0].Quotation != null)
+                //{
+                //    yield return new Token(Token.TokenType.ElementValue, quotedStrings[0]);
+                //}
+                //else // case 2: unquoted string or more than one strings - split into key-op-value triplet
                 {
                     var splitter = new StringSplitter(quotedStrings);
                     QuotedString qOp = null;
@@ -342,7 +332,7 @@ namespace LessML.Vamp
                     }
 
                     yield return new Token(Token.TokenType.Key, qKey);
-                    yield return new Token(Token.TokenType.Operator, qOp ?? new QuotedString { Snippet = rules.DefaultOp });
+                    yield return new Token(Token.TokenType.Operator, qOp);
 
                     var valueStrings = splitter.JoinRest();
                     yield return new Token(Token.TokenType.Value, valueStrings);
@@ -387,10 +377,6 @@ namespace LessML.Vamp
                         break;
                     case Token.TokenType.Value:
                         stack.Peek().SetValues(token.ValueOfValue);
-                        nodeCompleted = true;
-                        break;
-                    case Token.TokenType.ElementValue:
-                        stack.Peek().SetValues(new[]{token.ValueOfElementValue});
                         nodeCompleted = true;
                         break;
                 }

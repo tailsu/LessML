@@ -24,7 +24,8 @@ namespace LessXaml.Tests
 
         public TokenFactory Op(string op, StringQuotation quotation = null)
         {
-            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.Operator, new QuotedString { Snippet = op, Quotation = quotation}));
+            var str = op != null ? new QuotedString {Snippet = op, Quotation = quotation} : null;
+            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.Operator, str));
             return this;
         }
 
@@ -35,12 +36,6 @@ namespace LessXaml.Tests
                 list.Add(new QuotedString { Snippet = value, Quotation = quotation });
 
             myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.Value, list));
-            return this;
-        }
-
-        public TokenFactory ElementValue(string value, StringQuotation quotation = null)
-        {
-            myTokens.Add(new VampParser.Token(VampParser.Token.TokenType.ElementValue, new QuotedString { Snippet = value, Quotation = quotation }));
             return this;
         }
 

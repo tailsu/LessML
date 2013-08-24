@@ -41,8 +41,6 @@ namespace LessML.Macros
             QuotedString val = null;
             if (node.Key != null && node.Value.Count == 0)
                 val = node.Key;
-            else if (node.IsBareValue && node.Value.Count == 1)
-                val = node.Value[0];
 
             if (val == null || !ReferenceEquals(val.Quotation, TemplateApplication))
                 return MacroResult.ContinueToChildren;

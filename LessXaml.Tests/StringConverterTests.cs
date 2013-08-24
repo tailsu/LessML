@@ -19,7 +19,7 @@ namespace LessXaml.Tests
         [TestMethod]
         public void ToString_RootElement()
         {
-            RunTest("A", "A :");
+            RunTest("A", "A");
         }
     }
 }

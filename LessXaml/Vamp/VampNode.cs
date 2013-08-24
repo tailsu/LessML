@@ -21,11 +21,6 @@ namespace LessML.Vamp
             this.Value = new List<QuotedString>();
         }
 
-        public bool IsBareValue
-        {
-            get { return this.Key == null; }
-        }
-
         public bool IsPseudoRoot
         {
             get { return this.Key == null && this.Value.Count == 0; }

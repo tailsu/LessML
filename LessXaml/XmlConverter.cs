@@ -17,7 +17,6 @@ namespace LessML
             var rules = new VampRules();
             rules.Operators.Add(AttributeOp);
             rules.Operators.Add(ElementOp);
-            rules.DefaultOp = ElementOp;
             return rules;
         }
 
@@ -48,7 +47,7 @@ namespace LessML
             if (asText != null)
             {
                 var node = new VampNode();
-                node.SetValue(asText.Value);
+                node.Key = new QuotedString(asText.Value) { Quotation = VampRules.SingleQuotes };
                 return new[] { node };
             }
 
@@ -78,7 +77,7 @@ namespace LessML
                 var node = new VampNode
                 {
                     Key = resolver.StringFromXName(asElement.Name, false),
-                    Operator = new QuotedString(ElementOp),
+                    Operator = null,
                 };
 
                 node.Children.AddRange(asElement.Attributes().SelectMany(a => FromXml(a, resolver)));
@@ -93,19 +92,18 @@ namespace LessML
 
         private static void Transform(VampNode node, XElement parent, NamespaceResolver resolver)
         {
-            if (node.IsBareValue)
+            if (node.Key != null && node.Key.Quotation != null && node.Operator == null && node.Value.Count == 0)
             {
-                foreach (var v in node.Value)
+                var v = node.Key;
+
+                //TODO: add generic quotation support
+                if (v.Quotation.Start == "%C(")
                 {
-                    //TODO: add generic quotation support
-                    if (v.Quotation.Start == "%C(")
-                    {
-                        parent.Add(new XComment(v.Snippet));
-                    }
-                    else
-                    {
-                        parent.Add(new XText(v.Snippet));
-                    }
+                    parent.Add(new XComment(v.Snippet));
+                }
+                else
+                {
+                    parent.Add(new XText(v.Snippet));
                 }
 
                 if (node.Children.Count != 0)
@@ -115,7 +113,7 @@ namespace LessML
             }
 
             var key = node.Key.Snippet;
-            var op = node.Operator.Snippet;
+            var op = node.Operator != null ? node.Operator.Snippet : ":";
             var value = node.JoinValue();
             switch (op)
             {
